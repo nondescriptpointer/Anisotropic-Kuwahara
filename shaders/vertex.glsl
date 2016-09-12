@@ -1,7 +1,6 @@
 #version 430
-
-in vec4 vVertex;
+in vec4 gl_Vertex;
 
 void main(void){
-    gl_Position = vVertex;
+    gl_Position = gl_Vertex;
 }

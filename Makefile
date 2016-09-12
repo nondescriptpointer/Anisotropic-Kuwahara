@@ -15,7 +15,7 @@ build/%.o : %.cpp
 build/gliby/%.o : /home/ego/rnd/gliby/src/%.cpp
 	$(CC) -o $@ -c $(CPPFLAGS) $(CXXFLAGS) $<
 
-$(MAIN) : build/$(MAIN).o build/gliby/ShaderManager.o build/gliby/UniformManager.o
+$(MAIN) : build/$(MAIN).o build/gliby/ShaderManager.o build/gliby/UniformManager.o build/gliby/TextureManager.o
 	$(CC) -o $(MAIN) $^ $(LIBS)
 
 .PHONY: clean
