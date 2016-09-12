@@ -8,6 +8,9 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+// freeimage
+#include <FreeImage.h>
+
 // gliby stuff
 #include "ShaderManager.h"
 #include "UniformManager.h"
@@ -63,7 +66,7 @@ TextureManager* textureManager;
 int iterations = 8; // 3 to 8, default 8
 float sigma_t = 2.0; // 0 to 10, default 2.0
 float alpha = 1.0; // 1 to 999, default 1.0
-int radius = 3; // 1 to 20, default 3
+int radius = 8; // 1 to 20, default 3
 float smoothing = 0.33333; // 0 to 1, default 0.333
 int q = 8; // 1 to 16, default 8
 
@@ -263,7 +266,7 @@ void generateNoise(){
 	delete[] noise;
 }
 
-void setupContext(){
+void setupContext(const char* infile){
     // basic setup
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glDisable(GL_DEPTH_TEST);
@@ -320,9 +323,13 @@ void setupContext(){
     uniformManagers.push_back(new UniformManager(shaders.back(),sizeof(tfm_uniforms)/sizeof(char*),tfm_uniforms));
 
     // setup textures
-    const char* texs[] = {"jet.png","test.png"};
+    const char* texs[] = {"jet.png",infile};
     textureManager = new TextureManager();
     textureManager->loadTextures(sizeof(texs)/sizeof(char*),texs,GL_TEXTURE_2D,GL_TEXTURE0);
+
+    // set correct dimensions
+    m_width = textureManager->get_width(infile);
+    m_height = textureManager->get_height(infile);
 
     // generate our texture buffers
     glEnable(GL_TEXTURE_2D);
@@ -338,7 +345,7 @@ void setupContext(){
     glBindTexture(GL_TEXTURE_2D, 0);
 
 	// sets the correct source texture
-	textures[TEX_SRC] = textureManager->get("test.png");
+	textures[TEX_SRC] = textureManager->get(infile);
 
 	// generate noise with the same size as our image
 	generateNoise();
@@ -350,7 +357,7 @@ void setupContext(){
     updateKernel();
 }
 
-void render(){
+void render(const char* outfile){
 	// some simple settings
 	glPushAttrib(GL_ENABLE_BIT | GL_VIEWPORT_BIT );
     glEnable(GL_TEXTURE_2D);
@@ -443,6 +450,22 @@ void render(){
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);	
 
+    // output our texture to a file
+    glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_DST]);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    unsigned char *pixels = new unsigned char[m_width * m_height * 3];
+    glGetTexImage(GL_TEXTURE_2D,0,GL_BGR,GL_UNSIGNED_BYTE,&pixels[0]);
+    
+	FIBITMAP* bmp = FreeImage_ConvertFromRawBits(pixels, m_width, m_height, 3 * m_width, 24, 0xFF0000, 0x00FF00, 0x0000FF, false); 
+	// rotate back
+    FreeImage_FlipVertical(bmp);
+    FreeImage_Save(FIF_PNG, bmp, outfile, 0);
+
+    glPixelStorei(GL_PACK_ALIGNMENT, 0);
+
+    return;
+
 	// reset viewport
 	glViewport(0, 0, w_width, w_height);
 
@@ -483,6 +506,13 @@ int main(int argc, char **argv){
         return -1;
     }
 
+    if(argc < 3){
+        std::cout << "Usage: kuwahara infile outfile" << std::endl;
+        return -1;
+    }
+    const char* infile = argv[1];
+    const char* outfile = argv[2];
+
     // swap interval
     glfwSwapInterval(1);
     // set window open hints
@@ -513,14 +543,16 @@ int main(int argc, char **argv){
     }
 
     // setup the context
-    setupContext();
+    setupContext(infile);
+
+    render(outfile);
 
     // main loop
-    while(!glfwWindowShouldClose(window)){
+    /*while(!glfwWindowShouldClose(window)){
         render();
         glfwSwapBuffers(window);
         glfwPollEvents();
-    }
+    }*/
 
     glfwDestroyWindow(window);
     glfwTerminate();
