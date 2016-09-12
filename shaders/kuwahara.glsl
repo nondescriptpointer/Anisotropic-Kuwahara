@@ -1,6 +1,5 @@
 // by Jan Eric Kyprianidis <www.kyprianidis.com>
 #extension GL_EXT_gpu_shader4 : enable
-precision mediump float;
 
 uniform sampler2D src;
 uniform int radius;
