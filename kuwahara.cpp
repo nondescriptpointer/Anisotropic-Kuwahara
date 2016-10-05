@@ -64,10 +64,10 @@ TextureManager* textureManager;
 
 // parameters for the algorithm
 int iterations = 8; // 3 to 8, default 8
-float sigma_t = 2.0; // 0 to 10, default 2.0
+float sigma_t = 5.0; // 0 to 10, default 2.0
 float alpha = 1.0; // 1 to 999, default 1.0
-int radius = 8; // 1 to 20, default 3
-float smoothing = 0.33333; // 0 to 1, default 0.333
+int radius = 10; // 1 to 20, default 3, medium is 16
+float smoothing = 0.5; // 0 to 1, default 0.333
 int q = 8; // 1 to 16, default 8
 
 // image properties
@@ -276,7 +276,7 @@ void setupContext(const char* infile){
     glFrontFace(GL_CCW);
 
     // shaders
-    const char* searchPath[] = {"./shaders/"}; 
+    const char* searchPath[] = {"/home/ego/rnd/anistropic-kuwahara/shaders/"}; 
     shaderManager = new ShaderManager(sizeof(searchPath)/sizeof(char*),searchPath);
     ShaderAttribute attrs[] = {{0,"gl_Vertex"}};
     ShaderAttribute attrs_uv[] = {{0,"vVertex"},{3,"vTexCoord"}};
@@ -524,7 +524,8 @@ int main(int argc, char **argv){
     //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
     
     // create window
-    window = glfwCreateWindow(800,600,"Kuwahara",NULL,NULL);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    window = glfwCreateWindow(800,600,"",NULL,NULL);
     window_w = 800; window_h = 600;
     if(!window){
         std::cerr << "GLFW window creation failed" << std::endl;
